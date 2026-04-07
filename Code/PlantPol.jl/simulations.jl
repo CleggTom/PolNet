@@ -89,7 +89,7 @@ Checks if any node from the vector `neighbours` is active.
 """
 function any_neighbour(s::BitVector, neighbours::Vector{Int})
     for i = neighbours
-        if s[i]
+        if @inbounds s[i]
             return true
         end
     end
@@ -102,49 +102,37 @@ end
 
 Find proportion of feasbile pollinator nodes in the network from an inital seed. 
 """
-function simulate_network(seed, N, M, fadj_vec)
-    #state vectors
-    s = falses(M + N) 
-    stmp = similar(s)
-    
-    #preallocate indicies
-    all_indices = 1:(M+N)
-    pollinator_indices = 1:M
-    plant_indices = (M+1):(M+N)
-    
-    s[pollinator_indices[rand(M) .< seed]] .= true
-        
+function simulate_network!(s, stmp, N, M, fadj_vec)
     #simulation
     τ = 0
     changed = true
+
+    all_indicies = collect(1:(N+M))
+    # filter!(x -> x != exc, all_indicies)
     
     while changed && τ < 1000
         changed = false
         copyto!(stmp, s)
     
-        shuffled_indices = shuffle(all_indices)
-    
+        shuffle!(all_indicies)
+        
         #loop over nodes
-        for i in shuffled_indices
+        for i in all_indicies
             # Check if `i` is a pollinator or a plant
-            if s[i]
+            if i <= M # It's a pollinator
                 new_state = true
-            else
-                if i <= M # It's a pollinator
-                    new_state = true
-                    for (k,v) = fadj_vec[i]
-                        if !any_neighbour(stmp, v)
-                            new_state = false
-                            break
-                        end
+                for (k,v) = fadj_vec[i]
+                    if !any_neighbour(s, v)
+                        new_state = false
+                        break
                     end
-                else # It's a plant
-                    new_state = false
-                    for (k,v) = fadj_vec[i]
-                        if any_neighbour(stmp, v)
-                            new_state = true
-                            break
-                        end
+                end
+            else # It's a plant
+                new_state = false
+                for (k,v) = fadj_vec[i]
+                    if any_neighbour(s, v)
+                        new_state = true
+                        break
                     end
                 end
             end
@@ -157,6 +145,4 @@ function simulate_network(seed, N, M, fadj_vec)
         end
         τ += 1
     end
-
-    return s
 end
