@@ -1,6 +1,6 @@
 # Plant Pollinator Networks
 
-This repository contains the code for **Clegg T and Gross T.** ``*Temporal Structure Mediates the Robustness of Plant-Pollinator Networks to Disturbance*'' (working title).
+This repository contains the code for **Clegg T and Gross T.** ``*Temporal Structure Mediates the Robustness and Collapse of Plant–Pollinator Networks*'' (working title).
 
 ## Structure
 
